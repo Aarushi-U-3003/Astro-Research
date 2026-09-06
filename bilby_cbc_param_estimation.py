@@ -116,6 +116,7 @@ if __name__ == '__main__':
     priors['lambda_2'] = 0.0   
 
     # Force the sampler to look in a realistic neighborhood instead of the whole universe
+    # Root prior mins and maxs in literature -- can influence results
     priors['luminosity_distance'] = bilby.core.prior.Uniform(minimum=30, maximum=300, name='luminosity_distance', latex_label='$d_L$')
     priors['theta_jn'] = bilby.core.prior.Uniform(minimum=0, maximum=np.pi, name='theta_jn', latex_label='$\\theta_{JN}$') 
 
