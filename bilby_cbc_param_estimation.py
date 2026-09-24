@@ -116,9 +116,17 @@ if __name__ == '__main__':
     priors['lambda_2'] = 0.0   
 
     # Force the sampler to look in a realistic neighborhood instead of the whole universe
-    # Root prior mins and maxs in literature -- can influence results
-    priors['luminosity_distance'] = bilby.core.prior.Uniform(minimum=30, maximum=300, name='luminosity_distance', latex_label='$d_L$')
-    priors['theta_jn'] = bilby.core.prior.Uniform(minimum=0, maximum=np.pi, name='theta_jn', latex_label='$\\theta_{JN}$') 
+    # Root distance prior mins and maxs in literature -- can influence results
+    priors['luminosity_distance'] = bilby.core.prior.PowerLaw(alpha=2, minimum=10, maximum=500, name='luminosity_distance', latex_label='$d_L$')
+    # Check Baral paper for literature support -- standard range for low-level unbiased NS-NS detection 
+    priors['theta_jn'] = bilby.core.prior.Sine(minimum=0, maximum=np.pi, name='theta_jn', latex_label='$\\theta_{JN}$') 
+    # Between 0 and pi because that's the range of inverse cosine
+    # Need to explain how cosine of inclination angle results in uniform probability
+    # across plane, avoiding "squeezing" and overfitting near the poles
+    # Plus, we're not restricting to (0, pi/2) because the bimodality at the poles is
+    # required so that the degeneracy exists to break w/ EM data later
+    # Degeneracy is a dominant-mode effect, and while higher modes in 
+    # IMRPhenomXPHM slightly break it, it's not enough to be significant. 
 
     # Initialise the likelihood by passing in the interferometer data (ifos) and
     # the waveoform generator, as well the priors.
@@ -138,24 +146,21 @@ if __name__ == '__main__':
     # Run sampler. In this case we're going to use the `dynesty` sampler
     # Note that the `nlive`, `naccept`, and `sample` parameters are specified
     # to ensure sufficient convergence of the analysis.
-    # We set `npool=16` to parallelize the analysis over 16 cores.
+    # We set `npool=10` to parallelize the analysis over 10 cores -- 6 performance and 4 efficiency.
     # The conversion function will determine the distance posterior in post processing
 
     result = bilby.run_sampler(
         likelihood=likelihood,
         priors=priors,
+        clean=True,
         sampler='dynesty',
         sample='rwalk',
-        nlive=250,                  # Keep this tiny
-        walks=10,                 # Force shorter chains per point
+        nlive=1000,                  # Keep this tiny -- make larger later for formal runs
+        npool=10,                   # Decided to use all 10 cores to parallelize evaluations
+        walks=10,                 # Shorter chains per point
         check_point_plot=False,    # Turn off the checkpoint plots that are crashing
         label=label,
         outdir='outdir'
     )
     
-
-    # Plot the inferred waveform superposed on the actual data.
-    # result.plot_waveform_posterior(n_samples=1000)
-
-    # Make a corner plot.
     result.plot_corner()
