@@ -16,13 +16,13 @@ def compute_joint(em_dl_array, em_thetajn_array):
   return joint_weights, joint_entropy, ess_joint
 
 
-def plot_averaged_results(dl_array, thetajn_array, avg_em_dl, avg_em_thetajn, avg_joint, true_dl, true_thetajn, case_no):
+def plot_averaged_results(dl_array, raw_thetajn_array, thetajn_array, avg_em_dl, avg_em_thetajn, avg_joint, true_dl, true_thetajn, case_no):
   fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
   axes[0].hist(thetajn_array, bins=50, alpha=0.5, density=True, label="GW-only")
   axes[0].hist(thetajn_array, bins=50, weights=avg_em_thetajn, alpha=0.5, density=True, label="GW + sGRB")
   axes[0].axvline(true_thetajn, color="black", linestyle="--", label="true value")
-  axes[0].set_xlabel("theta_jn (rad)")
+  axes[0].set_xlabel("folded theta_jn (rad)")
   axes[0].legend()
 
   axes[1].hist(dl_array, bins=50, alpha=0.5, density=True, label="GW-only")
@@ -34,9 +34,9 @@ def plot_averaged_results(dl_array, thetajn_array, avg_em_dl, avg_em_thetajn, av
   # Joint is inherently 2D (dl AND theta_jn constrained together) -- a 1D histogram
   # of the weight values themselves isn't meaningful, so this shows the joint-weighted
   # density directly in the (theta_jn, dl) plane instead.
-  hb = axes[2].hexbin(thetajn_array, dl_array, C=avg_joint, gridsize=30, cmap="viridis", reduce_C_function=np.sum)
+  hb = axes[2].hexbin(raw_thetajn_array, dl_array, C=avg_joint, gridsize=30, cmap="viridis", reduce_C_function=np.sum)
   axes[2].plot(true_thetajn, true_dl, marker="*", color="red", markersize=15, label="true value")
-  axes[2].set_xlabel("theta_jn (rad)")
+  axes[2].set_xlabel("folded theta_jn (rad)")
   axes[2].set_ylabel("d_L (Mpc)")
   axes[2].legend()
   fig.colorbar(hb, ax=axes[2], label="joint weight density")
@@ -82,13 +82,11 @@ def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
           f"rel_spread={np.std(values)/np.mean(values):.4f} | "
           f"ESS mean={np.mean(ess_values):.1f}/{num_samples}, invalid runs (ESS<{ess_threshold}): {invalid}/{n_seeds}")
 
-  mi_score = mutual_info_regression(em_dl_array, em_thetajn_array)[0]
-  
-  print(f"Mutual Information: {mi_score:.3f} nats")
   print(f"\n===== {case_no} summary (true_dl={true_dl}, true_thetajn={true_thetajn}, n_seeds={n_seeds}) =====")
   summarize("Distance", dl_entropies, ess_dl_list)
   summarize("Inclination", thetajn_entropies, ess_thetajn_list)
   summarize("Joint", joint_entropies, ess_joint_list)
+  print(f"Paired seed difference: {np.mean(joint_entropies)-np.mean(dl_entropies)-np.mean(thetajn_entropies)}")
   print(f"Mean local density (sGRB, within 2*sigma of truth): {np.mean(local_densities):.4f}")
 
   print("=" * 60 + "\n")
@@ -100,7 +98,7 @@ def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
   avg_joint = np.mean(joint_arrays, axis=0)
   avg_joint /= np.sum(avg_joint)
 
-  plot_averaged_results(dl_array, thetajn_array, avg_em_dl, avg_em_thetajn, avg_joint, true_dl, true_thetajn, case_no)
+  plot_averaged_results(dl_array, raw_thetajn_array, thetajn_array, avg_em_dl, avg_em_thetajn, avg_joint, true_dl, true_thetajn, case_no)
 
   return {
     "dl_entropies": dl_entropies, "thetajn_entropies": thetajn_entropies, "joint_entropies": joint_entropies,
@@ -109,4 +107,4 @@ def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
 
 
 if __name__ == "__main__":
-  run_pipeline("Case4", true_dl=120, true_thetajn=1.57)
+  run_pipeline("Case1", true_dl=150, true_thetajn=0.0)
