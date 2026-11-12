@@ -7,9 +7,10 @@ def em_likelihood_thetajn(thetajn_array, em_estimate_thetajn, em_sigma_thetajn):
   weights /= np.sum(weights)
   return weights
 
-def em_sgrb_postprocessing(case_no, randomseed, true_thetajn_param, verbose=False):
+def em_sgrb_postprocessing(case_no, randomseed, true_dl, true_thetajn_param, verbose=False):
   np.random.seed(randomseed)
-  gw_results = bilby.result.read_in_result(filename=f"outdir/{case_no}_result.json")
+  case_no2 = f"dl{int(true_dl)}_th{true_thetajn_param:.2f}"
+  gw_results = bilby.result.read_in_result(filename=f"Phase2/outdir_{case_no}_rslice/{case_no2}_result.json")
   raw_thetajn_array = gw_results.posterior["theta_jn"].values
   thetajn_array = np.minimum(raw_thetajn_array, np.pi - raw_thetajn_array)
 

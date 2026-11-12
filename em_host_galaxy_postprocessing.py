@@ -6,9 +6,10 @@ def em_likelihood_dl(dl_array, em_estimate_dl, em_sigma_dl):
   weights /= np.sum(weights)
   return weights
 
-def em_host_galaxy_postprocessing(case_no, randomseed, true_dl_param, verbose=False):
+def em_host_galaxy_postprocessing(case_no, randomseed, true_dl_param, true_thetajn, verbose=False):
   np.random.seed(randomseed)
-  gw_results = bilby.result.read_in_result(filename=f"outdir/{case_no}_result.json")
+  case_no2 = f"dl{int(true_dl_param)}_th{true_thetajn:.2f}"
+  gw_results = bilby.result.read_in_result(filename=f"Phase2/outdir_{case_no}_rslice/{case_no2}_result.json")
   dl_array = gw_results.posterior["luminosity_distance"].values
 
   true_dl = true_dl_param

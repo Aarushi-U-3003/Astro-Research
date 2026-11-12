@@ -42,24 +42,26 @@ def plot_averaged_results(dl_array, raw_thetajn_array, thetajn_array, avg_em_dl,
   fig.colorbar(hb, ax=axes[2], label="joint weight density")
 
   plt.tight_layout()
-  plt.savefig(f"outdir/{case_no}_reweighting_comparison.png")
+  plt.savefig(f"Phase2/{case_no}_reweighting_comparison.png")
   plt.show()
 
 
-def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
+def run_pipeline(true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
   dl_entropies, thetajn_entropies, joint_entropies = [], [], []
   ess_dl_list, ess_thetajn_list, ess_joint_list = [], [], []
   local_densities = []
   em_dl_arrays, em_thetajn_arrays, joint_arrays = [], [], []
 
-  gw_results = bilby.result.read_in_result(filename=f"outdir/{case_no}_result.json")
+  case_no = f"dl_{int(true_dl)}_th_{true_thetajn:.2f}"
+  case_no2 = f"dl{int(true_dl)}_th{true_thetajn:.2f}"
+  gw_results = bilby.result.read_in_result(filename=f"Phase2/outdir_{case_no}_rslice/{case_no2}_result.json")
   num_samples = len(gw_results.posterior)
 
   dl_array = thetajn_array = None  # same across seeds -- captured once below
 
   for seed in range(n_seeds):
-    dl_array, em_dl_array, dl_entropy, ess_dl = em_host_galaxy_postprocessing(case_no, seed, true_dl)
-    raw_thetajn_array, thetajn_array, em_thetajn_array, thetajn_entropy, ess_thetajn, local_density = em_sgrb_postprocessing(case_no, seed, true_thetajn)
+    dl_array, em_dl_array, dl_entropy, ess_dl = em_host_galaxy_postprocessing(case_no, seed, true_dl, true_thetajn)
+    raw_thetajn_array, thetajn_array, em_thetajn_array, thetajn_entropy, ess_thetajn, local_density = em_sgrb_postprocessing(case_no, seed, true_dl, true_thetajn)
     joint_weights, joint_entropy, ess_joint = compute_joint(em_dl_array, em_thetajn_array)
 
     dl_entropies.append(dl_entropy)
@@ -88,6 +90,12 @@ def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
   summarize("Joint", joint_entropies, ess_joint_list)
   print(f"Paired seed difference: {np.mean(joint_entropies)-np.mean(dl_entropies)-np.mean(thetajn_entropies)}")
   print(f"Mean local density (sGRB, within 2*sigma of truth): {np.mean(local_densities):.4f}")
+  print(gw_results.posterior["luminosity_distance"].std())
+  print(gw_results.posterior["luminosity_distance"].nunique())
+  print(gw_results.posterior["theta_jn"].describe())
+  print(gw_results.log_evidence, gw_results.sampling_time)
+  print(gw_results.posterior["theta_jn"].describe())
+  print(gw_results.injection_parameters)
 
   print("=" * 60 + "\n")
 
@@ -107,4 +115,4 @@ def run_pipeline(case_no, true_dl, true_thetajn, n_seeds=10, ess_threshold=30):
 
 
 if __name__ == "__main__":
-  run_pipeline("Case1", true_dl=150, true_thetajn=0.0)
+  run_pipeline(true_dl=50, true_thetajn=0.0)
