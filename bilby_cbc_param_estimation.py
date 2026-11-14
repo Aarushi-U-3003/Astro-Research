@@ -95,7 +95,7 @@ if __name__ == '__main__':
         )
 
     injection_wfg = make_waveform_generator(bilby.gw.source.lal_binary_neutron_star)
-    likelihood_wfg = make_waveform_generator(bilby.gw.source.lal_binary_neutron_star_relative_binning) 
+    #likelihood_wfg = make_waveform_generator(bilby.gw.source.lal_binary_neutron_star_relative_binning) 
 
 
     # Set up interferometers.  In this case we'll use two interferometers
@@ -174,7 +174,7 @@ if __name__ == '__main__':
     # the waveoform generator, as well the priors.
     # The explicit distance marginalization is turned on to improve
     # convergence, and the posterior is recovered by the conversion function.
-    likelihood = bilby.gw.likelihood.RelativeBinningGravitationalWaveTransient(
+    '''likelihood = bilby.gw.likelihood.RelativeBinningGravitationalWaveTransient(
         interferometers=ifos,
         waveform_generator=likelihood_wfg,
         priors=priors,
@@ -184,7 +184,7 @@ if __name__ == '__main__':
         reference_frame="sky",
         time_reference="H1",
         fiducial_parameters=fiducial_params
-    )
+    )'''
 
     # Run sampler. In this case we're going to use the `dynesty` sampler
     # Note that the `nlive`, `naccept`, and `sample` parameters are specified
@@ -195,36 +195,40 @@ if __name__ == '__main__':
     #for key, p in priors.items():
         #print(key, type(p).__name__)
     #print("sampled:", sorted(priors.non_fixed_keys))
-    likelihood.parameters.update(injection_parameters)
+    '''likelihood.parameters.update(injection_parameters)
     print(likelihood.log_likelihood_ratio())
     for ifo in ifos:
         print(ifo.name, ifo.meta_data['optimal_SNR'] if 'optimal_SNR' in ifo.meta_data else ifo.optimal_snr_squared(injection_parameters)**0.5)
+    ''' 
 
     full_likelihood = bilby.gw.likelihood.GravitationalWaveTransient(
         interferometers=ifos,
         waveform_generator=injection_wfg,
         priors=priors,
-        distance_marginalization=False,
+        distance_marginalization=True,
         phase_marginalization=False,
         time_marginalization=False,
         reference_frame="sky",
         time_reference="H1",
     )
 
-    for theta_jn_test in [0.0, 0.1, 0.3, 0.5, 0.7, 1.0, 1.3, 1.5]:
+    '''for theta_jn_test in [0.0, 0.1, 0.3, 0.5, 0.7, 1.0, 1.3, 1.5]:
         pt = injection_parameters.copy()
         pt["theta_jn"] = theta_jn_test
         likelihood.parameters.update(pt)
-        print(theta_jn_test, likelihood.log_likelihood_ratio())
+        print(theta_jn_test, likelihood.log_likelihood_ratio())'''
         
     result = bilby.run_sampler(
         likelihood=full_likelihood,
         priors=priors,
-        clean=True,
+        #clean=True,
         sampler='dynesty',
-        sample='rwalk',
-        nlive=1000,                  
-        npool=3,                   # Decided to use all 10 cores to parallelize evaluations
+        sample='acceptance-walk',
+        naccept=60,
+        nlive=500,                  
+        check_point_delta_t=900,
+        resume=True,
+        npool=4,                   # Decided to use 4 cores to parallelize evaluations
         walks=30,                 
         check_point_plot=False,    # Turn off the checkpoint plots that are crashing
         label=label,

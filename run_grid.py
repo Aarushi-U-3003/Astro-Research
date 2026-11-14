@@ -35,7 +35,6 @@ thetas = np.linspace(0.0, 1.57, 10)
 cases = list(itertools.product(distances, thetas))
 
 max_concurrent = 3
-npool_per_case = 3
 running = []
 
 for dl, theta in cases:
@@ -44,7 +43,7 @@ for dl, theta in cases:
         time.sleep(10)
     logfile = open(f"logs/dl{int(dl)}_th{theta:.2f}.log", "w")
     p = subprocess.Popen(
-        ["python", "bilby_cbc_param_estimation.py", "--dl", str(dl), "--theta", str(theta), "--npool", str(npool_per_case)],
+        ["python", "bilby_cbc_param_estimation.py", "--dl", str(dl), "--theta", str(theta)],
         stdout=logfile, stderr=subprocess.STDOUT
     )
     running.append(p)
