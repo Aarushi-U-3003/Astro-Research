@@ -1,0 +1,50 @@
+{
+  "taskGroups": [
+    {
+      "taskCount": 8,
+      "parallelism": 8,
+      "taskCountPerNode": 8,
+      "taskSpec": {
+        "computeResource": {
+          "cpuMilli": 1000,
+          "memoryMib": 3584
+        },
+        "maxRunDuration": "144000s",
+        "maxRetryCount": 0,
+        "environment": {
+          "variables": {
+            "BUCKET": "__BUCKET__",
+            "NPOOL": "1"
+          }
+        },
+        "runnables": [
+          {
+            "script": {
+              "text": "#!/bin/bash\nset -euo pipefail\ngcloud storage cp \"gs://${BUCKET}/benchmark/run_case.sh\" \"/tmp/run_case_${BATCH_TASK_INDEX}.sh\"\nchmod +x \"/tmp/run_case_${BATCH_TASK_INDEX}.sh\"\nexec \"/tmp/run_case_${BATCH_TASK_INDEX}.sh\"\n"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "allocationPolicy": {
+    "location": {
+      "allowedLocations": ["regions/us-central1"]
+    },
+    "instances": [
+      {
+        "policy": {
+          "machineType": "t2d-standard-8",
+          "provisioningModel": "STANDARD",
+          "bootDisk": {
+            "type": "pd-balanced",
+            "sizeGb": 100
+          }
+        }
+      }
+    ]
+  },
+  "logsPolicy": {
+    "destination": "CLOUD_LOGGING"
+  }
+}

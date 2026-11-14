@@ -26,6 +26,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--dl", type=float, required=True, help="Injected Luminosity Distance")
     parser.add_argument("--theta", type=float, required=True, help="Injected Theta JN")
+    parser.add_argument("--npool", type=int, default=1, help="Dynesty pool workers per case")
     args = parser.parse_args()
 
     true_dl = args.dl
@@ -228,8 +229,8 @@ if __name__ == '__main__':
         nlive=500,                  
         check_point_delta_t=900,
         resume=True,
-        npool=4,                   # Decided to use 4 cores to parallelize evaluations
-        walks=30,                 
+        npool=args.npool,          # One worker per vCPU; set with --npool
+
         check_point_plot=False,    # Turn off the checkpoint plots that are crashing
         label=label,
         outdir=f"Phase2/outdir_dl_{int(true_dl)}_th_{true_theta:.2f}"
